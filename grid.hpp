@@ -288,7 +288,7 @@ public:
     for (auto &m : cell_mask) {
       m &= mm;
     }
-    kill_column(i, n);
+    //kill_column(i, n);
     data[i] = n;
     _rest--;
   }

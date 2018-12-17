@@ -7,7 +7,7 @@ CPPFLAGS= -O3 -march=native
 %: %.cpp ../grid.cpp
 	$(CC) $(CPPFLAGS) $^ -o $@
 
-test: ansmaker_test minlex_test
+test: $(TARGET)
 	./ansmaker_test > ansmaker.test
 	diff ansmaker.answer ansmaker.test
 	time ./minlex_test minlex.input > minlex.test
