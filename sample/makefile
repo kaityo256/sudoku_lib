@@ -1,22 +1,22 @@
-all: ansmaker_test minlex_test
+TARGET= ansmaker_test minlex_test solve_test
+all: $(TARGET)
 
 CC=g++
 CPPFLAGS= -O3 -march=native
 
-ansmaker_test: ansmaker_test.cpp ../grid.cpp
-	$(CC) $(CPPFLAGS) $^ -o $@
-
-minlex_test: minlex_test.cpp ../grid.cpp
+%: %.cpp ../grid.cpp
 	$(CC) $(CPPFLAGS) $^ -o $@
 
 test: ansmaker_test minlex_test
-	./ansmaker_test > ansmaker_test.test
-	diff ansmaker_test.orig ansmaker_test.test
-	time ./minlex_test sample.txt > sample.test
-	diff sample.minlex sample.test
+	./ansmaker_test > ansmaker.test
+	diff ansmaker.answer ansmaker.test
+	time ./minlex_test minlex.input > minlex.test
+	diff minlex.answer minlex.test
+	time ./solve_test solve.input > solve.test
+	diff solve.answer solve.test
 
 .PHONY: clean
 
 clean:
-	rm -f ansmaker_test minlex_test
-	rm -f ansmaker_test.test minlex_test.test
+	rm -f $(TARGET)
+	rm -f ansmaker.test minlex.test solve.test
