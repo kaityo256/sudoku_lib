@@ -35,7 +35,9 @@ inline int popcnt_u128(const mbit &s) {
   return _mm_popcnt_u64(m[0]) + _mm_popcnt_u64(m[1]);
 }
 
-inline int bitpos(mbit s) { return popcnt_u128(s - 1); }
+inline int bitpos(mbit s) {
+  return popcnt_u128(s - 1);
+}
 
 class Grid {
 private:
@@ -55,7 +57,9 @@ private:
   // マスクの自動初期化用クラス
   class GridInitializer {
   public:
-    GridInitializer() { Grid::init_masks(); };
+    GridInitializer() {
+      Grid::init_masks();
+    };
   };
   static GridInitializer si;
 
@@ -103,7 +107,9 @@ public:
     _valid = true;
   }
 
-  Grid() { init(); }
+  Grid() {
+    init();
+  }
 
   // その数字の列マスクを削除する
   void kill_column(int index, int num) {
@@ -288,7 +294,7 @@ public:
     for (auto &m : cell_mask) {
       m &= mm;
     }
-    //kill_column(i, n);
+    // kill_column(i, n);
     data[i] = n;
     _rest--;
   }
@@ -330,5 +336,26 @@ public:
     std::string ans;
     int n = solve_internal(ans);
     return (n == 1);
+  }
+
+  // 指定された数字以下についてユニット内二択の数を返す
+  int find_alt_unit(int v) {
+    int sum = 0;
+    for (int n = 0; n < v; n++) {
+      for (int i = 0; i < 27; i++) {
+        mbit m = cell_mask[n] & unit_mask[i];
+        if (popcnt_u128(m) == 2) {
+          sum++;
+        }
+      }
+    }
+    return sum;
+  }
+
+  void show() {
+    for (int i = 0; i < 81; i++) {
+      std::cout << data[i];
+    }
+    std::cout << std::endl;
   }
 };
