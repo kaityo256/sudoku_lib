@@ -41,6 +41,7 @@ inline int bitpos(mbit s) {
 
 class Grid {
 private:
+public:
   // 場所とボックスインデックス
   constexpr static int box_index[81] = {
       0, 0, 0, 1, 1, 1, 2, 2, 2, 0, 0, 0, 1, 1, 1, 2, 2, 2, 0, 0, 0,
@@ -96,7 +97,6 @@ private:
     return r == data_mask;
   }
 
-public:
   static void init_masks(void);
 
   void init() {
