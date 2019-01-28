@@ -352,6 +352,22 @@ public:
     return sum;
   }
 
+  // 現状、Hidden Singlesがあるかどうか返す
+  // Naked Singlesのチェックはしていない
+  bool has_singles(void) {
+    for (int i = 0; i < 9; i++) {
+      if (cell_mask[i] == mbit(0))
+        continue;
+      for (const auto &m : unit_mask) {
+        const mbit p = cell_mask[i] & m;
+        if ((popcnt_u128(p) == 1)) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
   void show() {
     for (int i = 0; i < 81; i++) {
       std::cout << data[i];
