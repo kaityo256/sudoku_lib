@@ -1,4 +1,5 @@
 #pragma once
+#include <cassert>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -28,6 +29,17 @@ inline mbit str2mbit(const std::string &str) {
     t ^= mbit((str[i] != '0')) << i;
   }
   return t;
+}
+
+inline std::string mbit2str(mbit m, const std::string &str) {
+  assert(str.length() == 81);
+  std::string str2 = str;
+  for (int i = 0; i < 81; i++) {
+    mbit v = 1;
+    v = v << i;
+    if ((m & v) == 0) str2[i] = '0';
+  }
+  return str2;
 }
 
 inline int popcnt_u128(const mbit &s) {
@@ -82,8 +94,7 @@ public:
   bool hidden_singles(void); // Hidden Singles
   // 現在の状態が正常かどうか
   bool is_valid(void) {
-    if (!_valid)
-      return false;
+    if (!_valid) return false;
     mbit data_mask = mbit(0);
     for (int i = 0; i < 81; i++) {
       if (data[i] == 0) {
@@ -138,8 +149,7 @@ public:
     init();
     for (int i = 0; i < 81; i++) {
       const int n = str[i] - '0';
-      if (n == 0)
-        continue;
+      if (n == 0) continue;
       if (!can_put(i, n)) {
         _valid = false;
       }
@@ -356,8 +366,7 @@ public:
   // Naked Singlesのチェックはしていない
   bool has_singles(void) {
     for (int i = 0; i < 9; i++) {
-      if (cell_mask[i] == mbit(0))
-        continue;
+      if (cell_mask[i] == mbit(0)) continue;
       for (const auto &m : unit_mask) {
         const mbit p = cell_mask[i] & m;
         if ((popcnt_u128(p) == 1)) {
