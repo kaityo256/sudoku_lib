@@ -334,7 +334,7 @@ public:
   unsigned int solve_unit(std::string &answer);
   static void solve(std::string &str);
 
-  std::string get_data() {
+  const std::string str() const {
     std::stringstream ss;
     for (int i = 0; i < 81; i++) {
       ss << data[i];
@@ -346,6 +346,11 @@ public:
     std::string ans;
     int n = solve_internal(ans);
     return (n == 1);
+  }
+
+  static bool is_unique(std::string &str) {
+    Grid g(str);
+    return g.is_unique();
   }
 
   // 指定された数字以下についてユニット内二択の数を返す
