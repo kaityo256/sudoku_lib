@@ -36,9 +36,7 @@ void Grid::init_masks(void) {
 bool Grid::solved_squares(void) {
   static stopwatch::timer<> timer("solved_squares");
   timer.start();
-  // mbit b = find_single2();
-  mbit b = find_single_org();
-  // mbit b = find_single_kawai2();
+  mbit b = find_single(cell_mask);
   bool flag = false;
   while (b) {
     const mbit p = (b & -b);
@@ -52,26 +50,6 @@ bool Grid::solved_squares(void) {
   }
   timer.stop();
   return flag;
-}
-
-bool Grid::hidden_singles(void) {
-  static stopwatch::timer<> timer("hidden_singles");
-  timer.start();
-  static const mbit mzero = mbit(0);
-  for (int i = 0; i < 9; i++) {
-    if (cell_mask[i] == mzero)
-      continue;
-    for (const auto &m : unit_mask) {
-      const mbit p = cell_mask[i] & m;
-      if ((popcnt_u128(p) == 1)) {
-        put(bitpos(p), i + 1);
-        timer.stop();
-        return true;
-      }
-    }
-  }
-  timer.stop();
-  return false;
 }
 
 void Grid::solve(std::string &str) {
@@ -93,8 +71,7 @@ unsigned int Grid::solve_unit(std::string &answer) {
   mbit um = 0;
   for (int i = 0; i < 9; i++) {
     const mbit nm = cell_mask[i];
-    if (nm == mbit(0))
-      continue;
+    if (nm == mbit(0)) continue;
     for (const auto &m : unit_mask) {
       const int n = popcnt_u128(nm & m);
       // assert(n!=1);
@@ -116,8 +93,7 @@ break_loop:
     Grid g2 = (*this);
     g2.put(n, min_index + 1);
     sum = sum + g2.solve_internal(answer);
-    if (sum > 1)
-      return sum;
+    if (sum > 1) return sum;
     v ^= p;
   }
   return sum;
@@ -132,13 +108,10 @@ unsigned int Grid::solve_internal(std::string &answer) {
   // Naked/Hidden singlesで解けるだけ解く
   while (flag) {
     flag = false;
-    if (solved_squares())
-      flag = true;
-    if (hidden_singles())
-      flag = true;
+    if (solved_squares()) flag = true;
+    if (hidden_singles()) flag = true;
   }
-  if (!is_valid())
-    return 0;
+  if (!is_valid()) return 0;
 
   if (_rest == 0) {
     // 解けたので解答をセット
@@ -156,13 +129,11 @@ unsigned int Grid::solve_internal(std::string &answer) {
   int pos = bitpos(mtwo);
   int sum = 0;
   for (int i = 0; i < 9; i++) {
-    if (!(mtwo & cell_mask[i]))
-      continue;
+    if (!(mtwo & cell_mask[i])) continue;
     Grid g2 = (*this);
     g2.put(pos, i + 1);
     sum = sum + g2.solve_internal(answer);
-    if (sum > 1)
-      return sum;
+    if (sum > 1) return sum;
   }
 
   return sum;
