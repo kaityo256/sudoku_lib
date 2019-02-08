@@ -34,6 +34,8 @@ void Grid::init_masks(void) {
 }
 
 bool Grid::solved_squares(void) {
+  static stopwatch::timer<> timer("solved_squares");
+  timer.start();
   // mbit b = find_single2();
   mbit b = find_single_org();
   // mbit b = find_single_kawai2();
@@ -48,10 +50,13 @@ bool Grid::solved_squares(void) {
     }
     b ^= p;
   }
+  timer.stop();
   return flag;
 }
 
 bool Grid::hidden_singles(void) {
+  static stopwatch::timer<> timer("hidden_singles");
+  timer.start();
   static const mbit mzero = mbit(0);
   for (int i = 0; i < 9; i++) {
     if (cell_mask[i] == mzero)
@@ -60,10 +65,12 @@ bool Grid::hidden_singles(void) {
       const mbit p = cell_mask[i] & m;
       if ((popcnt_u128(p) == 1)) {
         put(bitpos(p), i + 1);
+        timer.stop();
         return true;
       }
     }
   }
+  timer.stop();
   return false;
 }
 
