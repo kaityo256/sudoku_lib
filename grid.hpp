@@ -32,9 +32,7 @@ public:
   // マスクの自動初期化用クラス
   class GridInitializer {
   public:
-    GridInitializer() {
-      Grid::init_masks();
-    };
+    GridInitializer() { Grid::init_masks(); };
   };
   static GridInitializer si;
 
@@ -56,7 +54,8 @@ public:
   bool solved_squares(void); // Naked Singles
   // 現在の状態が正常かどうか
   bool is_valid(void) {
-    if (!_valid) return false;
+    if (!_valid)
+      return false;
     mbit r = mbit(0);
     for (auto &m : cell_mask) {
       r |= m;
@@ -75,9 +74,7 @@ public:
     _valid = true;
   }
 
-  Grid() {
-    init();
-  }
+  Grid() { init(); }
 
   // その数字の列マスクを削除する
   void kill_column(int index, int num) {
@@ -106,7 +103,8 @@ public:
     init();
     for (int i = 0; i < 81; i++) {
       const int n = str[i] - '0';
-      if (n == 0) continue;
+      if (n == 0)
+        continue;
       if (!can_put(i, n)) {
         _valid = false;
       }
@@ -263,8 +261,11 @@ public:
       int r = bitpos(v) / 9;
       for (int i = 0; i < 9; i++) {
         if (v & m_row[i]) {
-          //put(r * 9 + i, n + 1);
-          printf("puts %d on %d row\n", n + 1, r * 9 + i);
+          if (!can_put(r * 9 + i, n + 1)) {
+            _valid = false;
+            return false;
+          }
+          put(r * 9 + i, n + 1);
           hit = true;
         }
       }
@@ -277,16 +278,16 @@ public:
     static stopwatch::timer<> timer("hidden_singles");
     bool hit = false;
     hidden_singles_row();
-
     timer.start();
     static const mbit mzero = mbit(0);
     for (int i = 0; i < 9; i++) {
-      if (cell_mask[i] == mzero) continue;
+      if (cell_mask[i] == mzero)
+        continue;
       for (auto m : unit_mask) {
         const mbit p = cell_mask[i] & m;
         if ((popcnt_u128(p) == 1)) {
           put(bitpos(p), i + 1);
-          printf("puts %d on %d\n", i + 1, bitpos(p));
+          // printf("puts %d on %d\n", i + 1, bitpos(p));
           hit = true;
         }
       }
@@ -298,7 +299,8 @@ public:
   // Naked Singlesのチェックはしていない
   bool has_singles(void) {
     for (int i = 0; i < 9; i++) {
-      if (cell_mask[i] == mbit(0)) continue;
+      if (cell_mask[i] == mbit(0))
+        continue;
       for (const auto &m : unit_mask) {
         const mbit p = cell_mask[i] & m;
         if ((popcnt_u128(p) == 1)) {

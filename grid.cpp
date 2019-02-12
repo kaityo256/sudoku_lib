@@ -71,7 +71,8 @@ unsigned int Grid::solve_unit(std::string &answer) {
   mbit um = 0;
   for (int i = 0; i < 9; i++) {
     const mbit nm = cell_mask[i];
-    if (nm == mbit(0)) continue;
+    if (nm == mbit(0))
+      continue;
     for (const auto &m : unit_mask) {
       const int n = popcnt_u128(nm & m);
       // assert(n!=1);
@@ -93,12 +94,12 @@ break_loop:
     Grid g2 = (*this);
     g2.put(n, min_index + 1);
     sum = sum + g2.solve_internal(answer);
-    if (sum > 1) return sum;
+    if (sum > 1)
+      return sum;
     v ^= p;
   }
   return sum;
 }
-
 // 解の数を返す
 // 0: 解なし
 // 1: 唯一解あり
@@ -108,10 +109,13 @@ unsigned int Grid::solve_internal(std::string &answer) {
   // Naked/Hidden singlesで解けるだけ解く
   while (flag) {
     flag = false;
-    if (solved_squares()) flag = true;
-    if (hidden_singles()) flag = true;
+    if (solved_squares())
+      flag = true;
+    if (hidden_singles())
+      flag = true;
   }
-  if (!is_valid()) return 0;
+  if (!is_valid())
+    return 0;
 
   if (_rest == 0) {
     // 解けたので解答をセット
@@ -129,11 +133,13 @@ unsigned int Grid::solve_internal(std::string &answer) {
   int pos = bitpos(mtwo);
   int sum = 0;
   for (int i = 0; i < 9; i++) {
-    if (!(mtwo & cell_mask[i])) continue;
+    if (!(mtwo & cell_mask[i]))
+      continue;
     Grid g2 = (*this);
     g2.put(pos, i + 1);
     sum = sum + g2.solve_internal(answer);
-    if (sum > 1) return sum;
+    if (sum > 1)
+      return sum;
   }
 
   return sum;
