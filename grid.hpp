@@ -263,7 +263,8 @@ public:
       int r = bitpos(v) / 9;
       for (int i = 0; i < 9; i++) {
         if (v & m_row[i]) {
-          put(r * 9 + 1, n + 1);
+          //put(r * 9 + i, n + 1);
+          printf("puts %d on %d row\n", n + 1, r * 9 + i);
           hit = true;
         }
       }
@@ -274,8 +275,9 @@ public:
 
   bool hidden_singles(void) {
     static stopwatch::timer<> timer("hidden_singles");
-    // hidden_singles_row();
     bool hit = false;
+    hidden_singles_row();
+
     timer.start();
     static const mbit mzero = mbit(0);
     for (int i = 0; i < 9; i++) {
@@ -284,7 +286,7 @@ public:
         const mbit p = cell_mask[i] & m;
         if ((popcnt_u128(p) == 1)) {
           put(bitpos(p), i + 1);
-          // printf("puts %d on %d\n", i + 1, bitpos(p));
+          printf("puts %d on %d\n", i + 1, bitpos(p));
           hit = true;
         }
       }
