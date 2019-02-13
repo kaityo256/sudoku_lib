@@ -202,8 +202,8 @@ public:
   }
 
   // その場所にその数字がおけるか
-  bool can_put(const int index, const int n) {
-    return (cell_mask[n - 1] & (mbit(1) << index));
+  bool can_put(unsigned int pos, const int n) {
+    return (cell_mask[n - 1] & (mbit(1) << pos));
   }
 
   unsigned int solve_internal(std::string &answer);
@@ -261,9 +261,76 @@ public:
     }
   }
 
+  void hidden_singles2(void) {
+    mbit m_row[9] = {};
+    mbit m_column[9] = {};
+    mbit m_box[9] = {};
+    for (int n = 0; n < 9; n++) {
+      for (int i = 0; i < 81; i++) {
+        if (cell_mask[n] & (mbit(1) << i)) {
+          int r = i % 9;
+          int c = i / 9;
+          int br = r % 3;
+          int bc = c % 3;
+          int b = br + bc * 3;            //ボックス内インデックス
+          int bi = (r / 3) + (c / 3) * 3; //ボックスのインデックス
+          m_row[r] |= mbit(1) << (c + n * 9);
+          m_column[c] |= mbit(1) << (r + n * 9);
+          m_box[b] |= mbit(1) << (bi + n * 9);
+        }
+      }
+    }
+    // Hidden singles in rows
+    mbit gs;
+    gs = Grid::find_single(m_row);
+    while (gs) {
+      mbit v = gs & -gs;
+      int n = bitpos(v) / 9 + 1;
+      int r = bitpos(v) % 9;
+      for (int i = 0; i < 9; i++) {
+        if (m_row[i] & v) {
+          int pos = i + r * 9;
+          printf("puts %d on %d (row)\n", n, pos);
+        }
+      }
+      gs ^= v;
+    }
+    // Hidden singles in columns
+    gs = Grid::find_single(m_column);
+    while (gs) {
+      mbit v = gs & -gs;
+      int n = bitpos(v) / 9 + 1;
+      int c = bitpos(v) % 9;
+      for (int i = 0; i < 9; i++) {
+        if (m_column[i] & v) {
+          int pos = c + i * 9;
+          printf("puts %d on %d (column)\n", n, pos);
+        }
+      }
+      gs ^= v;
+    }
+    // Hidden singles in boxes
+    gs = Grid::find_single(m_box);
+    while (gs) {
+      mbit v = gs & -gs;
+      int n = bitpos(v) / 9 + 1;  //どの数字か
+      int bindex = bitpos(v) % 9; //どのボックスか
+      for (int i = 0; i < 9; i++) {
+        if (m_box[i] & v) {
+          int br = (bindex / 3) * 3 + (i / 3);
+          int bc = (bindex % 3) * 3 + (i % 3);
+          int pos = bc + br * 9;
+          printf("puts %d on %d (box)\n", n, pos);
+        }
+      }
+      gs ^= v;
+    }
+  }
+
   bool hidden_singles(void) {
     static stopwatch::timer<> timer("hidden_singles");
     bool hit = false;
+    hidden_singles2();
     timer.start();
     static const mbit mzero = mbit(0);
     for (int i = 0; i < 9; i++) {
@@ -273,7 +340,7 @@ public:
         const mbit p = cell_mask[i] & m;
         if ((popcnt_u128(p) == 1)) {
           put(bitpos(p), i + 1);
-          // printf("puts %d on %d\n", i + 1, bitpos(p));
+          printf("puts %d on %d\n", i + 1, bitpos(p));
           hit = true;
         }
       }
