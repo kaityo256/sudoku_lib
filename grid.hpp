@@ -32,7 +32,9 @@ public:
   // マスクの自動初期化用クラス
   class GridInitializer {
   public:
-    GridInitializer() { Grid::init_masks(); };
+    GridInitializer() {
+      Grid::init_masks();
+    };
   };
   static GridInitializer si;
 
@@ -74,7 +76,9 @@ public:
     _valid = true;
   }
 
-  Grid() { init(); }
+  Grid() {
+    init();
+  }
 
   // その数字の列マスクを削除する
   void kill_column(int index, int num) {
@@ -239,45 +243,27 @@ public:
     return sum;
   }
 
-  bool hidden_singles_row(void) {
-    bool hit = false;
+  // 行のマスクを得る
+  // 縦に見ると行のマスクに、横は123456789の数字の順番になっている
+  void get_hidden_singles_row(mbit m_row[9]) {
     mbit mm[9] = {};
     for (int i = 0; i < 9; i++) {
       for (int j = 0; j < 9; j++) {
         mm[i] |= (mbit(1) << (j * 9 + i));
       }
     }
-    mbit m_row[9] = {};
+    std::fill(&m_row[0], &m_row[9], mbit(0));
     for (int n = 0; n < 9; n++) {
       mbit m = cell_mask[n];
       for (int i = 0; i < 9; i++) {
         m_row[i] |= (((m & mm[i]) >> i) << n);
       }
     }
-    mbit gs = Grid::find_single(m_row);
-    while (gs) {
-      mbit v = gs & -gs;
-      int n = bitpos(v) % 9;
-      int r = bitpos(v) / 9;
-      for (int i = 0; i < 9; i++) {
-        if (v & m_row[i]) {
-          if (!can_put(r * 9 + i, n + 1)) {
-            _valid = false;
-            return false;
-          }
-          put(r * 9 + i, n + 1);
-          hit = true;
-        }
-      }
-      gs ^= v;
-    }
-    return hit;
   }
 
   bool hidden_singles(void) {
     static stopwatch::timer<> timer("hidden_singles");
     bool hit = false;
-    hidden_singles_row();
     timer.start();
     static const mbit mzero = mbit(0);
     for (int i = 0; i < 9; i++) {
