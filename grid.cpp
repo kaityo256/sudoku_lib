@@ -31,6 +31,13 @@ void Grid::init_masks(void) {
     const mbit m = unit_mask[ri] | unit_mask[ci + 9] | unit_mask[bi + 18];
     kill_cell_mask[i] = ((mbit(1) << 81) - 1) & (~m);
   }
+  // ユニットごとのkillマスク作成
+  for (int n = 0; n < 9; n++) {
+    for (int pos = 0; pos < 81; pos++) {
+      Grid g;
+      g.put(pos, n + 1);
+    }
+  }
 }
 
 bool Grid::solved_squares(void) {

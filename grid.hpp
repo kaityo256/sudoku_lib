@@ -29,6 +29,11 @@ public:
   //そのマスに置かれたら、どのcell_maskを消すべきかANDするマスク
   static mbit kill_cell_mask[81];
 
+  //その数字がその場所に置かれたら、ユニットマスクのどこを消すべきかANDするマスク
+  static mbit kill_row_mask[9][81];
+  static mbit kill_column_mask[9][81];
+  static mbit kill_box_mask[9][81];
+
   // マスクの自動初期化用クラス
   class GridInitializer {
   public:
@@ -46,8 +51,9 @@ public:
 
   /*
    * ユニットごとにどの場所に置けるかを表現するマスク
-   * 引数は場所
-   * 1がおける行が9ビット、2がおける行が9ビット...と81ビット使う
+   * 引数はユニット内の位置
+   * ヒント数字ごとに9ビットずつ使う
+   * row_mask[3]は、三行目のマスク。最初の9ビットがヒント数字1の、次の9ビットが2のマスク
    */
   mbit row_mask[9];
   mbit column_mask[9];
@@ -243,21 +249,30 @@ public:
     return sum;
   }
 
-  // 行のマスクを得る
-  // 縦に見ると行のマスクに、横は123456789の数字の順番になっている
-  void get_hidden_singles_row(mbit m_row[9]) {
-    mbit mm[9] = {};
-    for (int i = 0; i < 9; i++) {
-      for (int j = 0; j < 9; j++) {
-        mm[i] |= (mbit(1) << (j * 9 + i));
+  //TODO: これを使ってkill maskを作る
+  // m_rowなどを受け取りにする
+  // 後でリファクタリング
+  void show_kill_mask(void) {
+    mbit m_row[9] = {};
+    mbit m_column[9] = {};
+    mbit m_box[9] = {};
+    for (int n = 0; n < 9; n++) {
+      for (int i = 0; i < 81; i++) {
+        if (cell_mask[n] & (mbit(1) << i)) {
+          int r = i % 9;
+          int c = i / 9;
+          int br = r % 3;
+          int bc = c % 3;
+          int b = br + bc * 3;            //ボックス内インデックス
+          int bi = (r / 3) + (c / 3) * 3; //ボックスのインデックス
+          m_row[r] |= mbit(1) << (c + n * 9);
+          m_column[c] |= mbit(1) << (r + n * 9);
+          m_box[b] |= mbit(1) << (bi + n * 9);
+        }
       }
     }
-    std::fill(&m_row[0], &m_row[9], mbit(0));
-    for (int n = 0; n < 9; n++) {
-      mbit m = cell_mask[n];
-      for (int i = 0; i < 9; i++) {
-        m_row[i] |= (((m & mm[i]) >> i) << n);
-      }
+    for (auto m : m_row) {
+      std::cout << m << std::endl;
     }
   }
 
