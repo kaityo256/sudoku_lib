@@ -4,6 +4,9 @@ Grid::GridInitializer Grid::si; //マスクの初期化
 mbit Grid::unit_mask[27];
 mbit Grid::kill_cell_mask[81];
 const int Grid::box_index[81];
+mbit Grid::kill_row_mask[9][81][9];
+mbit Grid::kill_column_mask[9][81][9];
+mbit Grid::kill_box_mask[9][81][9];
 
 // マスクの初期化
 void Grid::init_masks(void) {
@@ -36,7 +39,20 @@ void Grid::init_masks(void) {
     for (int pos = 0; pos < 81; pos++) {
       Grid g;
       g.put(pos, n + 1);
+      mbit m_row[9] = {};
+      mbit m_column[9] = {};
+      mbit m_box[9] = {};
+      g.get_kill_mask(m_row, m_column, m_box);
+      for (int j = 0; j < 9; j++) {
+        kill_row_mask[n][pos][j] = m_row[j];
+        kill_column_mask[n][pos][j] = m_column[j];
+        kill_box_mask[n][pos][j] = m_box[j];
+      }
     }
+  }
+  int n = 0;
+  for (int i = 0; i < 9; i++) {
+    std::cout << kill_box_mask[n][0][i] << std::endl;
   }
 }
 

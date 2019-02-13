@@ -30,16 +30,15 @@ public:
   static mbit kill_cell_mask[81];
 
   //その数字がその場所に置かれたら、ユニットマスクのどこを消すべきかANDするマスク
-  static mbit kill_row_mask[9][81];
-  static mbit kill_column_mask[9][81];
-  static mbit kill_box_mask[9][81];
+  // 数字、場所、ユニット内の場所
+  static mbit kill_row_mask[9][81][9];
+  static mbit kill_column_mask[9][81][9];
+  static mbit kill_box_mask[9][81][9];
 
   // マスクの自動初期化用クラス
   class GridInitializer {
   public:
-    GridInitializer() {
-      Grid::init_masks();
-    };
+    GridInitializer() { Grid::init_masks(); };
   };
   static GridInitializer si;
 
@@ -82,9 +81,7 @@ public:
     _valid = true;
   }
 
-  Grid() {
-    init();
-  }
+  Grid() { init(); }
 
   // その数字の列マスクを削除する
   void kill_column(int index, int num) {
@@ -249,13 +246,15 @@ public:
     return sum;
   }
 
-  //TODO: これを使ってkill maskを作る
+  // TODO: 現在のcell_maskからkill maskを作る
   // m_rowなどを受け取りにする
   // 後でリファクタリング
-  void show_kill_mask(void) {
+  void get_kill_mask(mbit m_row[9], mbit m_column[9], mbit m_box[9]) {
+    /*
     mbit m_row[9] = {};
     mbit m_column[9] = {};
     mbit m_box[9] = {};
+    */
     for (int n = 0; n < 9; n++) {
       for (int i = 0; i < 81; i++) {
         if (cell_mask[n] & (mbit(1) << i)) {
@@ -270,9 +269,6 @@ public:
           m_box[b] |= mbit(1) << (bi + n * 9);
         }
       }
-    }
-    for (auto m : m_row) {
-      std::cout << m << std::endl;
     }
   }
 
