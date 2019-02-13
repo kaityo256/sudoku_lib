@@ -50,10 +50,6 @@ void Grid::init_masks(void) {
       }
     }
   }
-  int n = 0;
-  for (int i = 0; i < 9; i++) {
-    std::cout << kill_box_mask[n][0][i] << std::endl;
-  }
 }
 
 bool Grid::solved_squares(void) {

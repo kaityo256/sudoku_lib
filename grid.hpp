@@ -46,7 +46,10 @@ public:
   bool _valid;  // 正常な状態かどうか
   int data[81]; //現在決定している数字
   mbit data_mask;
-  mbit cell_mask[9]; // 各数字ごとにおける可能性のあるセル
+  mbit cell_mask[9]; // 各数字ごとにおける可能性のあるセル(naked singles)
+  mbit remained_row_mask[9]; // 各行ごとのユニットマスク(hidden_singles)
+  mbit remained_column_mask[9]; // 各行ごとのユニットマスク(hidden_singles)
+  mbit remained_box_mask[9]; // 各行ごとのユニットマスク(hidden_singles)
 
   /*
    * ユニットごとにどの場所に置けるかを表現するマスク
@@ -74,7 +77,9 @@ public:
 
   void init() {
     std::fill(&cell_mask[0], &cell_mask[9], mask81);
-    std::fill(&column_mask[0], &column_mask[9], mask81);
+    std::fill(&remained_row_mask[0], &remained_row_mask[9], mask81);
+    std::fill(&remained_column_mask[0], &remained_column_mask[9], mask81);
+    std::fill(&remained_box_mask[0], &remained_box_mask[9], mask81);
     std::fill(&data[0], &data[81], 0);
     data_mask = mask81;
     _rest = 81;
@@ -82,29 +87,6 @@ public:
   }
 
   Grid() { init(); }
-
-  // その数字の列マスクを削除する
-  void kill_column(int index, int num) {
-    num = num - 1;
-    int ri = index / 9;
-    int ci = index % 9;
-    mbit mask1 = mask81 ^ (((mbit(1) << 9) - 1) << (num * 9));
-    column_mask[ri] &= mask1;
-    mbit mask2 = mask81 ^ (mbit(1) << (num * 9 + ci));
-    for (int i = 0; i < 9; i++) {
-      column_mask[i] &= mask2;
-    }
-    for (int n = 0; n < 9; n++) {
-      column_mask[ri] &= mask81 ^ (mbit(1) << (n * 9 + ci));
-    }
-    // ボックスを消す
-    int bx = (ci / 3) * 3;
-    int by = (ri / 3) * 3;
-    mbit mask3 = mask81 ^ ((mbit(1) << 3) - 1) << (num * 9 + bx);
-    column_mask[by + 0] &= mask3;
-    column_mask[by + 1] &= mask3;
-    column_mask[by + 2] &= mask3;
-  }
 
   Grid(const std::string &str) {
     init();
@@ -175,6 +157,14 @@ public:
     return v;
   }
 
+  void kill_unit_mask(int pos, int n) {
+    for (int i = 0; i < 9; i++) {
+      remained_row_mask[i] &= kill_row_mask[n][pos][i];
+      remained_column_mask[i] &= kill_column_mask[n][pos][i];
+      remained_box_mask[i] &= kill_box_mask[n][pos][i];
+    }
+  }
+
   // 数字をマスに置き、マスクの対応するビットを削除
   void put(int pos, int n) {
     cell_mask[n - 1] &= kill_cell_mask[pos];
@@ -182,7 +172,7 @@ public:
     for (auto &m : cell_mask) {
       m &= mm;
     }
-    // kill_column(i, n);
+    kill_unit_mask(pos, n - 1);
     data[pos] = n;
     data_mask ^= mbit(1) << pos;
     _rest--;
@@ -192,14 +182,6 @@ public:
   void show_mask() {
     for (int i = 0; i < 9; i++) {
       std::cout << cell_mask[i] << std::endl;
-    }
-    std::cout << std::endl;
-  }
-
-  //現在のユニットマスクの表示
-  void show_unit_mask() {
-    for (int i = 0; i < 9; i++) {
-      std::cout << column_mask[i] << std::endl;
     }
     std::cout << std::endl;
   }
@@ -276,6 +258,7 @@ public:
     mbit m_row[9] = {};
     mbit m_column[9] = {};
     mbit m_box[9] = {};
+    /*
     for (int n = 0; n < 9; n++) {
       for (int i = 0; i < 81; i++) {
         if (cell_mask[n] & (mbit(1) << i)) {
@@ -291,6 +274,8 @@ public:
         }
       }
     }
+    */
+    get_kill_mask(m_row, m_column, m_box);
     // Hidden singles in rows
     mbit gs;
     gs = Grid::find_single(m_row);
@@ -373,6 +358,13 @@ public:
       }
     }
     return false;
+  }
+
+  template <class T> static void show(T &tt) {
+    for (auto m : tt) {
+      std::cout << m << std::endl;
+    }
+    std::cout << std::endl;
   }
 
   void show() {
