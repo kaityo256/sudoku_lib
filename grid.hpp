@@ -10,7 +10,7 @@
 #include <x86intrin.h>
 #endif
 
-#include "../stopwatch/stopwatch.hpp"
+//#include "../stopwatch/stopwatch.hpp"
 #include "mbit.hpp"
 
 class Grid {
@@ -38,7 +38,9 @@ public:
   // マスクの自動初期化用クラス
   class GridInitializer {
   public:
-    GridInitializer() { Grid::init_masks(); };
+    GridInitializer() {
+      Grid::init_masks();
+    };
   };
   static GridInitializer si;
 
@@ -46,10 +48,10 @@ public:
   bool _valid;  // 正常な状態かどうか
   int data[81]; //現在決定している数字
   mbit data_mask;
-  mbit cell_mask[9]; // 各数字ごとにおける可能性のあるセル(naked singles)
-  mbit remained_row_mask[9]; // 各行ごとのユニットマスク(hidden_singles)
+  mbit cell_mask[9];            // 各数字ごとにおける可能性のあるセル(naked singles)
+  mbit remained_row_mask[9];    // 各行ごとのユニットマスク(hidden_singles)
   mbit remained_column_mask[9]; // 各行ごとのユニットマスク(hidden_singles)
-  mbit remained_box_mask[9]; // 各行ごとのユニットマスク(hidden_singles)
+  mbit remained_box_mask[9];    // 各行ごとのユニットマスク(hidden_singles)
 
   /*
    * ユニットごとにどの場所に置けるかを表現するマスク
@@ -86,7 +88,9 @@ public:
     _valid = true;
   }
 
-  Grid() { init(); }
+  Grid() {
+    init();
+  }
 
   Grid(const std::string &str) {
     init();
@@ -231,12 +235,8 @@ public:
   // TODO: 現在のcell_maskからkill maskを作る
   // m_rowなどを受け取りにする
   // 後でリファクタリング
+  // m_row などは0初期化されていることが想定されている
   void get_kill_mask(mbit m_row[9], mbit m_column[9], mbit m_box[9]) {
-    /*
-    mbit m_row[9] = {};
-    mbit m_column[9] = {};
-    mbit m_box[9] = {};
-    */
     for (int n = 0; n < 9; n++) {
       for (int i = 0; i < 81; i++) {
         if (cell_mask[n] & (mbit(1) << i)) {
@@ -258,23 +258,6 @@ public:
     mbit m_row[9] = {};
     mbit m_column[9] = {};
     mbit m_box[9] = {};
-    /*
-    for (int n = 0; n < 9; n++) {
-      for (int i = 0; i < 81; i++) {
-        if (cell_mask[n] & (mbit(1) << i)) {
-          int r = i % 9;
-          int c = i / 9;
-          int br = r % 3;
-          int bc = c % 3;
-          int b = br + bc * 3;            //ボックス内インデックス
-          int bi = (r / 3) + (c / 3) * 3; //ボックスのインデックス
-          m_row[r] |= mbit(1) << (c + n * 9);
-          m_column[c] |= mbit(1) << (r + n * 9);
-          m_box[b] |= mbit(1) << (bi + n * 9);
-        }
-      }
-    }
-    */
     get_kill_mask(m_row, m_column, m_box);
     // Hidden singles in rows
     mbit gs;
@@ -323,25 +306,85 @@ public:
     }
   }
 
+  // マスクによるhidden singlesの探索
+  bool hidden_singles_mask(void) {
+    //static stopwatch::timer<> timer("hidden_singles_mask");
+    //timer.start();
+    // Hidden singles in rows
+    mbit gs;
+    gs = Grid::find_single(remained_row_mask);
+    while (gs) {
+      mbit v = gs & -gs;
+      int n = bitpos(v) / 9 + 1;
+      int r = bitpos(v) % 9;
+      for (int i = 0; i < 9; i++) {
+        if (remained_row_mask[i] & v) {
+          int pos = i + r * 9;
+          put(pos, n);
+          //timer.stop();
+          return true;
+          //printf("puts %d on %d (row)\n", n, pos);
+        }
+      }
+      gs ^= v;
+    }
+    // Hidden singles in columns
+    gs = Grid::find_single(remained_column_mask);
+    while (gs) {
+      mbit v = gs & -gs;
+      int n = bitpos(v) / 9 + 1;
+      int c = bitpos(v) % 9;
+      for (int i = 0; i < 9; i++) {
+        if (remained_column_mask[i] & v) {
+          int pos = c + i * 9;
+          put(pos, n);
+          //timer.stop();
+          return true;
+          //printf("puts %d on %d (column)\n", n, pos);
+        }
+      }
+      gs ^= v;
+    }
+    // Hidden singles in boxes
+    gs = Grid::find_single(remained_box_mask);
+    while (gs) {
+      mbit v = gs & -gs;
+      int n = bitpos(v) / 9 + 1;  //どの数字か
+      int bindex = bitpos(v) % 9; //どのボックスか
+      for (int i = 0; i < 9; i++) {
+        if (remained_box_mask[i] & v) {
+          int br = (bindex / 3) * 3 + (i / 3);
+          int bc = (bindex % 3) * 3 + (i % 3);
+          int pos = bc + br * 9;
+          put(pos, n);
+          //timer.stop();
+          return true;
+          //printf("puts %d on %d (box)\n", n, pos);
+        }
+      }
+      gs ^= v;
+    }
+    return false;
+  }
+
   bool hidden_singles(void) {
-    static stopwatch::timer<> timer("hidden_singles");
+    //static stopwatch::timer<> timer("hidden_singles");
     bool hit = false;
-    hidden_singles2();
-    timer.start();
+    //hidden_singles_mask();
+    //timer.start();
     static const mbit mzero = mbit(0);
     for (int i = 0; i < 9; i++) {
-      if (cell_mask[i] == mzero)
-        continue;
+      if (cell_mask[i] == mzero) continue;
       for (auto m : unit_mask) {
         const mbit p = cell_mask[i] & m;
         if ((popcnt_u128(p) == 1)) {
           put(bitpos(p), i + 1);
-          printf("puts %d on %d\n", i + 1, bitpos(p));
+          //printf("puts %d on %d\n", i + 1, bitpos(p));
           hit = true;
         }
       }
     }
-    timer.stop();
+    //timer.stop();
     return hit;
   }
   // 現状、Hidden Singlesがあるかどうか返す
@@ -360,7 +403,8 @@ public:
     return false;
   }
 
-  template <class T> static void show(T &tt) {
+  template <class T>
+  static void show(T &tt) {
     for (auto m : tt) {
       std::cout << m << std::endl;
     }

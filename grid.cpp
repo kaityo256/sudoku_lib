@@ -53,8 +53,8 @@ void Grid::init_masks(void) {
 }
 
 bool Grid::solved_squares(void) {
-  static stopwatch::timer<> timer("solved_squares");
-  timer.start();
+  //static stopwatch::timer<> timer("solved_squares");
+  //timer.start();
   mbit b = find_single(cell_mask);
   bool flag = false;
   while (b) {
@@ -67,7 +67,7 @@ bool Grid::solved_squares(void) {
     }
     b ^= p;
   }
-  timer.stop();
+  //timer.stop();
   return flag;
 }
 
@@ -128,10 +128,9 @@ unsigned int Grid::solve_internal(std::string &answer) {
   // Naked/Hidden singlesで解けるだけ解く
   while (flag) {
     flag = false;
-    if (solved_squares())
-      flag = true;
-    if (hidden_singles())
-      flag = true;
+    if (solved_squares()) flag = true;
+    //if (hidden_singles()) flag = true;
+    if (hidden_singles_mask()) flag = true;
   }
   if (!is_valid())
     return 0;
