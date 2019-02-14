@@ -181,6 +181,7 @@ public:
       m &= mm;
     }
     kill_unit_mask(pos, n - 1);
+
     data[pos] = n;
     data_mask ^= mbit(1) << pos;
     _rest--;
@@ -314,7 +315,6 @@ public:
   bool hidden_singles(void) {
     //static stopwatch::timer<> timer("hidden_singles");
     bool hit = false;
-    //hidden_singles_mask();
     //timer.start();
     static const mbit mzero = mbit(0);
     for (int i = 0; i < 9; i++) {
@@ -364,6 +364,24 @@ public:
     return sum;
   }
 
+  template <class T>
+  static void show(T &tt) {
+    for (auto m : tt) {
+      std::cout << m << std::endl;
+    }
+    std::cout << std::endl;
+  }
+
+  void show() {
+    for (int i = 0; i < 81; i++) {
+      std::cout << data[i];
+    }
+    std::cout << std::endl;
+  }
+
+#if 1
+  unsigned int solve_internal(std::string &answer);
+#else
   // 解の数を返す
   // 0: 解なし
   // 1: 唯一解あり
@@ -398,19 +416,5 @@ public:
       return solve_unit(answer);
     }
   }
-
-  template <class T>
-  static void show(T &tt) {
-    for (auto m : tt) {
-      std::cout << m << std::endl;
-    }
-    std::cout << std::endl;
-  }
-
-  void show() {
-    for (int i = 0; i < 81; i++) {
-      std::cout << data[i];
-    }
-    std::cout << std::endl;
-  }
+#endif
 };

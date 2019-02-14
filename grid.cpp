@@ -124,3 +124,37 @@ break_loop:
   //stimer.stop();
   return sum;
 }
+// 解の数を返す
+// 0: 解なし
+// 1: 唯一解あり
+// 2以上: 複数解あり
+unsigned int Grid::solve_internal(std::string &answer) {
+  bool hit = true;
+  // Naked/Hidden singlesで解けるだけ解く
+  while (hit) {
+    hit = false;
+    if (solved_squares()) hit = true;
+    //if (hidden_singles()) hit = true;
+    if (hidden_singles_mask()) hit = true;
+  }
+  if (!is_valid()) {
+    return 0;
+  }
+
+  if (_rest == 0) {
+    // 解けたので解答をセット
+    answer.resize(81);
+    for (int i = 0; i < 81; i++) {
+      answer[i] = '0' + data[i];
+    }
+    return 1;
+  }
+
+  //セル内二択
+  mbit mtwo = find_two(cell_mask);
+  if (mtwo) {
+    return cell_alt(mtwo, answer);
+  } else {
+    return solve_unit(answer);
+  }
+}
