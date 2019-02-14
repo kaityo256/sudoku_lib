@@ -53,8 +53,8 @@ void Grid::init_masks(void) {
 }
 
 bool Grid::solved_squares(void) {
-  static stopwatch::timer<> timer("solved_squares");
-  timer.start();
+  //static stopwatch::timer<> timer("solved_squares");
+  //timer.start();
   mbit b = find_single(cell_mask);
   bool flag = false;
   while (b) {
@@ -67,7 +67,7 @@ bool Grid::solved_squares(void) {
     }
     b ^= p;
   }
-  timer.stop();
+  //timer.stop();
   return flag;
 }
 
@@ -85,8 +85,8 @@ void Grid::solve(std::string &str) {
 }
 
 unsigned int Grid::solve_unit(std::string &answer) {
-  static stopwatch::timer<> timer("solve_unit");
-  timer.start();
+  //static stopwatch::timer<> timer("solve_unit");
+  //timer.start();
   int min = 9;
   int min_index = -1;
   mbit um = 0;
@@ -116,11 +116,11 @@ break_loop:
     g2.put(n, min_index + 1);
     sum = sum + g2.solve_internal(answer);
     if (sum > 1) {
-      timer.stop();
+      //timer.stop();
       return sum;
     }
     v ^= p;
   }
-  timer.stop();
+  //stimer.stop();
   return sum;
 }
