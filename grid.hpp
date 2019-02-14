@@ -10,7 +10,7 @@
 #include <x86intrin.h>
 #endif
 
-//#include "../stopwatch/stopwatch.hpp"
+#include "../stopwatch/stopwatch.hpp"
 #include "mbit.hpp"
 
 class Grid {
@@ -106,18 +106,20 @@ public:
   }
   // 9個のビット列のうち、同じ桁で1つだけ立っているビットを返す
   static mbit find_single(const mbit *g) {
+    static stopwatch::timer<> timer("find_single");
+    timer.start();
     mbit b = g[0] & g[1];
     mbit s = g[0] | g[1];
     for (int i = 2; i < 9; i++) {
       b |= s & g[i];
       s |= g[i];
     }
+    timer.stop();
     return s ^ b;
   }
 
-  // セル内二択を探す
-  mbit find_two(void) {
-    mbit *b = cell_mask;
+  // 二択になっている場所を返す
+  mbit find_two(mbit *b) {
     // 0..3が1ビット
     mbit b0_3a = (b[0] ^ b[1]) & ~(b[2] | b[3]);
     mbit b0_3b = (b[2] ^ b[3]) & ~(b[0] | b[1]);
@@ -171,6 +173,8 @@ public:
 
   // 数字をマスに置き、マスクの対応するビットを削除
   void put(int pos, int n) {
+    static stopwatch::timer<> timer("put");
+    timer.start();
     cell_mask[n - 1] &= kill_cell_mask[pos];
     mbit mm = mask81 ^ (mbit(1) << pos);
     for (auto &m : cell_mask) {
@@ -180,6 +184,7 @@ public:
     data[pos] = n;
     data_mask ^= mbit(1) << pos;
     _rest--;
+    timer.stop();
   }
 
   // 現在のマスクの表示
@@ -195,7 +200,6 @@ public:
     return (cell_mask[n - 1] & (mbit(1) << pos));
   }
 
-  unsigned int solve_internal(std::string &answer);
   unsigned int solve_unit(std::string &answer);
   static void solve(std::string &str);
 
@@ -256,24 +260,47 @@ public:
 
   // マスクによるhidden singlesの探索
   bool hidden_singles_mask(void) {
-    //static stopwatch::timer<> timer("hidden_singles_mask");
-    //timer.start();
+    static stopwatch::timer<> timer("hidden_singles_mask");
+    timer.start();
     // Hidden singles in rows
     mbit gs;
+    bool hit = false;
     gs = Grid::find_single(remained_row_mask);
     while (gs) {
+      hit = true;
       mbit v = gs & -gs;
       int n = bitpos(v) / 9 + 1;
       int r = bitpos(v) % 9;
+      mbit vv = cell_mask[n - 1] & unit_mask[r];
+      int pos2 = bitpos(vv);
+      if (pos2 == 128) break;
+      if (can_put(pos2, n)) {
+        put(pos2, n);
+      }
+      /*
+      if (pos2 == 128) {
+        std::cout << n << std::endl;
+        std::cout << v << std::endl;
+        std::cout << cell_mask[n - 1] << std::endl;
+        std::cout << "---" << std::endl;
+        show(remained_row_mask);
+        exit(1);
+      }
+      */
+      /*
       for (int i = 0; i < 9; i++) {
         if (remained_row_mask[i] & v) {
           int pos = i + r * 9;
-          put(pos, n);
+          //assert(pos == pos2);
+          if (can_put(pos, n)) {
+            put(pos, n);
+            printf("%d\n", pos);
+          }
           //timer.stop();
-          return true;
           //printf("puts %d on %d (row)\n", n, pos);
         }
       }
+      */
       gs ^= v;
     }
     // Hidden singles in columns
@@ -282,15 +309,23 @@ public:
       mbit v = gs & -gs;
       int n = bitpos(v) / 9 + 1;
       int c = bitpos(v) % 9;
+      mbit vv = cell_mask[n - 1] & unit_mask[c + 9];
+      int pos2 = bitpos(vv);
+      if (pos2 == 128) break;
+      if (can_put(pos2, n)) {
+        put(pos2, n);
+      }
+      /*
       for (int i = 0; i < 9; i++) {
         if (remained_column_mask[i] & v) {
           int pos = c + i * 9;
-          put(pos, n);
+          if (can_put(pos, n)) put(pos, n);
           //timer.stop();
-          return true;
+          //return true;
+          hit = true;
           //printf("puts %d on %d (column)\n", n, pos);
         }
-      }
+      }*/
       gs ^= v;
     }
     // Hidden singles in boxes
@@ -299,23 +334,34 @@ public:
       mbit v = gs & -gs;
       int n = bitpos(v) / 9 + 1;  //どの数字か
       int bindex = bitpos(v) % 9; //どのボックスか
+      mbit vv = cell_mask[n - 1] & unit_mask[bindex + 18];
+      int pos2 = bitpos(vv);
+      if (pos2 == 128) break;
+      if (can_put(pos2, n)) {
+        put(pos2, n);
+      }
+      /*
       for (int i = 0; i < 9; i++) {
         if (remained_box_mask[i] & v) {
           int br = (bindex / 3) * 3 + (i / 3);
           int bc = (bindex % 3) * 3 + (i % 3);
           int pos = bc + br * 9;
-          put(pos, n);
+          if (can_put(pos, n)) put(pos, n);
           //timer.stop();
-          return true;
+          //return true;
+          hit = true;
           //printf("puts %d on %d (box)\n", n, pos);
         }
       }
+      */
       gs ^= v;
     }
-    return false;
+    timer.stop();
+    return hit;
   }
 
-  bool hidden_singles(void) {
+  bool
+  hidden_singles(void) {
     //static stopwatch::timer<> timer("hidden_singles");
     bool hit = false;
     //hidden_singles_mask();
@@ -349,6 +395,58 @@ public:
       }
     }
     return false;
+  }
+
+  // セル内二択による再帰
+  unsigned int cell_alt(mbit &mtwo, std::string &answer) {
+    mtwo = mtwo & (-mtwo);
+    int pos = bitpos(mtwo);
+    int sum = 0;
+    for (int i = 0; i < 9; i++) {
+      if (!(mtwo & cell_mask[i]))
+        continue;
+      Grid g2 = (*this);
+      g2.put(pos, i + 1);
+      sum = sum + g2.solve_internal(answer);
+      if (sum > 1)
+        return sum;
+    }
+    return sum;
+  }
+
+  // 解の数を返す
+  // 0: 解なし
+  // 1: 唯一解あり
+  // 2以上: 複数解あり
+  unsigned int solve_internal(std::string &answer) {
+    bool hit = true;
+    // Naked/Hidden singlesで解けるだけ解く
+    while (hit) {
+      hit = false;
+      if (solved_squares()) hit = true;
+      //if (hidden_singles()) hit = true;
+      if (hidden_singles_mask()) hit = true;
+    }
+    if (!is_valid()) {
+      return 0;
+    }
+
+    if (_rest == 0) {
+      // 解けたので解答をセット
+      answer.resize(81);
+      for (int i = 0; i < 81; i++) {
+        answer[i] = '0' + data[i];
+      }
+      return 1;
+    }
+
+    //セル内二択
+    mbit mtwo = find_two(cell_mask);
+    if (mtwo) {
+      return cell_alt(mtwo, answer);
+    } else {
+      return solve_unit(answer);
+    }
   }
 
   template <class T>
