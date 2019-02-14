@@ -254,58 +254,6 @@ public:
     }
   }
 
-  void hidden_singles2(void) {
-    mbit m_row[9] = {};
-    mbit m_column[9] = {};
-    mbit m_box[9] = {};
-    get_kill_mask(m_row, m_column, m_box);
-    // Hidden singles in rows
-    mbit gs;
-    gs = Grid::find_single(m_row);
-    while (gs) {
-      mbit v = gs & -gs;
-      int n = bitpos(v) / 9 + 1;
-      int r = bitpos(v) % 9;
-      for (int i = 0; i < 9; i++) {
-        if (m_row[i] & v) {
-          int pos = i + r * 9;
-          printf("puts %d on %d (row)\n", n, pos);
-        }
-      }
-      gs ^= v;
-    }
-    // Hidden singles in columns
-    gs = Grid::find_single(m_column);
-    while (gs) {
-      mbit v = gs & -gs;
-      int n = bitpos(v) / 9 + 1;
-      int c = bitpos(v) % 9;
-      for (int i = 0; i < 9; i++) {
-        if (m_column[i] & v) {
-          int pos = c + i * 9;
-          printf("puts %d on %d (column)\n", n, pos);
-        }
-      }
-      gs ^= v;
-    }
-    // Hidden singles in boxes
-    gs = Grid::find_single(m_box);
-    while (gs) {
-      mbit v = gs & -gs;
-      int n = bitpos(v) / 9 + 1;  //どの数字か
-      int bindex = bitpos(v) % 9; //どのボックスか
-      for (int i = 0; i < 9; i++) {
-        if (m_box[i] & v) {
-          int br = (bindex / 3) * 3 + (i / 3);
-          int bc = (bindex % 3) * 3 + (i % 3);
-          int pos = bc + br * 9;
-          printf("puts %d on %d (box)\n", n, pos);
-        }
-      }
-      gs ^= v;
-    }
-  }
-
   // マスクによるhidden singlesの探索
   bool hidden_singles_mask(void) {
     //static stopwatch::timer<> timer("hidden_singles_mask");
