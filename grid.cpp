@@ -124,6 +124,8 @@ break_loop:
   //stimer.stop();
   return sum;
 }
+
+#if 1
 // 解の数を返す
 // 0: 解なし
 // 1: 唯一解あり
@@ -158,3 +160,4 @@ unsigned int Grid::solve_internal(std::string &answer) {
     return solve_unit(answer);
   }
 }
+#endif

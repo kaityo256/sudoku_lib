@@ -10,7 +10,7 @@
 #include <x86intrin.h>
 #endif
 
-//#include "../stopwatch/stopwatch.hpp"
+#include "../stopwatch/stopwatch.hpp"
 #include "mbit.hpp"
 
 class Grid {
@@ -351,16 +351,26 @@ public:
   unsigned int cell_alt(mbit &mtwo, std::string &answer) {
     mtwo = mtwo & (-mtwo);
     int pos = bitpos(mtwo);
-    int sum = 0;
+    int n1 = -1;
+    int n2 = -1;
     for (int i = 0; i < 9; i++) {
-      if (!(mtwo & cell_mask[i]))
-        continue;
-      Grid g2 = (*this);
-      g2.put(pos, i + 1);
-      sum = sum + g2.solve_internal(answer);
-      if (sum > 1)
-        return sum;
+      if (mtwo & cell_mask[i]) {
+        if (n1 == -1) {
+          n1 = i + 1;
+        } else {
+          n2 = i + 1;
+        }
+      }
     }
+
+    int sum = 0;
+    Grid g1 = (*this);
+    g1.put(pos, n1);
+    Grid g2 = (*this);
+    g2.put(pos, n2);
+    sum += g1.solve_internal(answer);
+    if (sum > 1) return sum;
+    sum += g2.solve_internal(answer);
     return sum;
   }
 
@@ -379,6 +389,7 @@ public:
     std::cout << std::endl;
   }
 
+//なぜかヘッダで宣言すると遅くなる。要検証。
 #if 1
   unsigned int solve_internal(std::string &answer);
 #else
