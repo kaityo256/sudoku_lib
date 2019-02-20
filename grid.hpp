@@ -63,7 +63,29 @@ public:
   mbit column_mask[9];
   mbit box_mask[9];
 
+#if 1
   bool solved_squares(void); // Naked Singles
+#else
+  bool solved_squares(void) {
+    //static stopwatch::timer<> timer("solved_squares");
+    //timer.start();
+    mbit b = find_single(cell_mask);
+    bool flag = false;
+    while (b) {
+      const mbit p = (b & -b);
+      for (int i = 0; i < 9; i++) {
+        if (p & cell_mask[i]) {
+          put(bitpos(p), i + 1);
+          flag = true;
+        }
+      }
+      b ^= p;
+    }
+    //timer.stop();
+    return flag;
+  }
+#endif
+
   // 現在の状態が正常かどうか
   bool is_valid(void) {
     if (!_valid)
@@ -120,6 +142,8 @@ public:
 
   // 二択になっている場所を返す
   mbit find_two(mbit *b) {
+    static stopwatch::timer<> timer("find_two");
+    timer.start();
     // 0..3が1ビット
     mbit b0_3a = (b[0] ^ b[1]) & ~(b[2] | b[3]);
     mbit b0_3b = (b[2] ^ b[3]) & ~(b[0] | b[1]);
@@ -147,7 +171,7 @@ public:
               | (b0_3_1 & b4_7_0 & b[8])   // 1,0,1
               | (b0_3_0 & b4_7_1 & b[8])   // 0,1,1
               | (b0_3_0 & b4_7_2 & ~b[8]); // 0,2,0
-
+    timer.stop();
     return b2;
   }
 
@@ -345,6 +369,13 @@ public:
       }
     }
     return false;
+  }
+
+  // ユニット内二択による再帰
+
+  void unit_alt() {
+    mbit mtwo = find_two(cell_mask);
+    std::cout << mtwo << std::endl;
   }
 
   // セル内二択による再帰

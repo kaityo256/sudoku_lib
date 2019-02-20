@@ -52,6 +52,7 @@ void Grid::init_masks(void) {
   }
 }
 
+#if 1
 bool Grid::solved_squares(void) {
   //static stopwatch::timer<> timer("solved_squares");
   //timer.start();
@@ -70,8 +71,11 @@ bool Grid::solved_squares(void) {
   //timer.stop();
   return flag;
 }
+#endif
 
 void Grid::solve(std::string &str) {
+  static stopwatch::timer<> timer("solve");
+  timer.start();
   Grid g(str);
   std::string answer;
   int n = g.solve_internal(answer);
@@ -82,11 +86,12 @@ void Grid::solve(std::string &str) {
   } else {
     std::cout << answer << std::endl;
   }
+  timer.stop();
 }
 
 unsigned int Grid::solve_unit(std::string &answer) {
-  //static stopwatch::timer<> timer("solve_unit");
-  //timer.start();
+  static stopwatch::timer<> timer("solve_unit");
+  timer.start();
   int min = 9;
   int min_index = -1;
   mbit um = 0;
@@ -107,6 +112,7 @@ unsigned int Grid::solve_unit(std::string &answer) {
     }
   }
 break_loop:
+  timer.stop();
   mbit v = (cell_mask[min_index] & um);
   int sum = 0;
   while (v) {
@@ -131,6 +137,8 @@ break_loop:
 // 1: 唯一解あり
 // 2以上: 複数解あり
 unsigned int Grid::solve_internal(std::string &answer) {
+  static stopwatch::timer<> timer("solve_internal");
+  timer.start();
   bool hit = true;
   // Naked/Hidden singlesで解けるだけ解く
   while (hit) {
@@ -140,6 +148,7 @@ unsigned int Grid::solve_internal(std::string &answer) {
     if (hidden_singles_mask()) hit = true;
   }
   if (!is_valid()) {
+    timer.stop();
     return 0;
   }
 
@@ -149,14 +158,17 @@ unsigned int Grid::solve_internal(std::string &answer) {
     for (int i = 0; i < 81; i++) {
       answer[i] = '0' + data[i];
     }
+    timer.stop();
     return 1;
   }
 
   //セル内二択
   mbit mtwo = find_two(cell_mask);
   if (mtwo) {
+    timer.stop();
     return cell_alt(mtwo, answer);
   } else {
+    timer.stop();
     return solve_unit(answer);
   }
 }
