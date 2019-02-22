@@ -10,7 +10,6 @@
 #include <x86intrin.h>
 #endif
 
-#include "../stopwatch/stopwatch.hpp"
 #include "mbit.hpp"
 
 class Grid {
