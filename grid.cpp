@@ -165,9 +165,6 @@ unsigned int Grid::solve_internal(std::string &answer) {
   if (mtwo) {
     return row_alt(mtwo, answer);
   }
-
-  // ここまで来ることはないはず
-  abort();
   return solve_unit(answer);
 }
 #endif

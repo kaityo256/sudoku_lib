@@ -134,7 +134,7 @@ public:
   }
 
   // 二択になっている場所を返す
-  mbit find_two(mbit *b) {
+  static mbit find_two(mbit *b) {
     // 0..3が1ビット
     mbit b0_3a = (b[0] ^ b[1]) & ~(b[2] | b[3]);
     mbit b0_3b = (b[2] ^ b[3]) & ~(b[0] | b[1]);
