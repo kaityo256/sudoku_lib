@@ -6,7 +6,7 @@ class AnsMaker {
 private:
   bool search_answer(Grid &g2, const int index, std::string &ans) {
     if (index == 81) {
-      ans = g2.get_data();
+      ans = g2.str();
       return true;
     }
     int a[] = {1, 2, 3, 4, 5, 6, 7, 8, 9};
