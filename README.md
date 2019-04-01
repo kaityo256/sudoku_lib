@@ -9,4 +9,3 @@ Some utilities for Sudoku
 * ansmaker.hpp: Making Answer Grid
 * grid.cpp/grid.hpp: Sudoku Solver
 * minlex.hpp: Normalize Sudoku by minlex order
-
